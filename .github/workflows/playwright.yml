@@ -2,9 +2,9 @@ name: Playwright Tests
 on:
   workflow_dispatch:
   push:
-    branches: [ main, master, gh-pages ]
+    branches: [ main, master, findbugs-tests ]
   pull_request:
-    branches: [ main, master, gh-pages ]
+    branches: [ main, master, findbugs-tests ]
 permissions:
   contents: write  # Нужно для деплоя в gh-pages
 jobs:

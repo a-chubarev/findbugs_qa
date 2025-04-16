@@ -103,8 +103,6 @@ export class ProductCard {
         await this.page.waitForLoadState();
         await this.currencySelect.selectOption(validCurrency);
         await this.currencySelect.dispatchEvent('change');
-        //Вариант ниже сработал только с явно заданным таймаутом
-        //await this.currencySelect.selectOption({ value: validCurrency });
     }
 
     /**
@@ -150,7 +148,7 @@ export class ProductCard {
         const imageLocator = colorLocator.locator('img');
 
         // Ждем, пока элемент станет видимым
-        await colorLocator.waitFor({ state: 'visible', timeout: 5000 });
+        await colorLocator.waitFor({ state: 'visible'});
 
         // Кликаем по элементу
         await colorLocator.click();

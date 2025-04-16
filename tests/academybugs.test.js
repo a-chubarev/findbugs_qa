@@ -28,12 +28,8 @@ test.describe.serial('Academybugs Test', () => {
     test('The page freezes when changing the currency', async ({page}) => {
         //Кликаем на товар
         await productsPage.productItem('4481370').click()
-        //Добавил в тест, а не в метод selectCurrency - в нем ожидание не срабатывает
-        //TODO: убрать таймаут
-        //await page.waitForTimeout(6000)
-        //await productCard.currencySelect.waitFor({ state: 'visible' })
         await productCard.selectCurrency('eur')
-        await expect(page.getByRole('heading', { name: 'You found a crash bug, examine the page for 5 seconds' }).first()).toBeVisible({timeout: 40000});
+        await expect(page.getByRole('heading', { name: 'You found a crash bug, examine the page for 5 seconds' }).first()).toBeVisible();
     })
 
     test('The page becomes unresponsive when clicking on "Retrieve Password" and no email is sent', async ({page}) => {
@@ -48,7 +44,7 @@ test.describe.serial('Academybugs Test', () => {
     test('The page becomes unresponsive when clicking on "Post Comment"', async ({page}) => {
         await productsPage.productItem('4481370').click()
         await productCard.fillProductReply()
-        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible({timeout:25000});
+        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible();
     })
 
     test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({page}) => {
@@ -56,8 +52,7 @@ test.describe.serial('Academybugs Test', () => {
         await productCard.selectProductColor(10)
         await productCard.increaseProductQuantity(1)
 
-        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible({timeout:60000});
-
+        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible();
     })
 })
 

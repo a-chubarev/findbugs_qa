@@ -1,5 +1,4 @@
 import {ProductReply} from "../helpers";
-import {expect} from "@playwright/test";
 
 /**
  * Карточка товара

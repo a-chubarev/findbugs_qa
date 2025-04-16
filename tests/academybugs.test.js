@@ -1,6 +1,5 @@
 import {expect, test} from "@playwright/test";
 import {MainPage, ProductsPage, ProductCard, RegisterPage, ForgotPasswordPage, UserCartPage} from '../pages'
-import {th} from "@faker-js/faker";
 
 test.describe.serial('Academybugs Test', () => {
     let mainPage

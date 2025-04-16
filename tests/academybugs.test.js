@@ -22,14 +22,14 @@ test.describe.serial('Academybugs Test', () => {
     test('The page freezes when clicking on the numbers of results', async ({page}) => {
         //Выбираем количество товаров на странице
         await productsPage.selectPerPage(50)
-        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible();
+        await expect(mainPage.bugMessage).toBeVisible()
     })
 
     test('The page freezes when changing the currency', async ({page}) => {
         //Кликаем на товар
         await productsPage.productItem('4481370').click()
         await productCard.selectCurrency('eur')
-        await expect(page.getByRole('heading', { name: 'You found a crash bug, examine the page for 5 seconds' }).first()).toBeVisible();
+        await expect(mainPage.bugMessage).toBeVisible()
     })
 
     test('The page becomes unresponsive when clicking on "Retrieve Password" and no email is sent', async ({page}) => {
@@ -38,13 +38,13 @@ test.describe.serial('Academybugs Test', () => {
         await registerPage.clickForgotPasswordLink()
         await forgotPasswordPage.fillRetrieveEmailField()
         await forgotPasswordPage.clickRetrievePasswordButton()
-        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible();
+        await expect(mainPage.bugMessage).toBeVisible()
     })
 
     test('The page becomes unresponsive when clicking on "Post Comment"', async ({page}) => {
         await productsPage.productItem('4481370').click()
         await productCard.fillProductReply()
-        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible();
+        await expect(mainPage.bugMessage).toBeVisible()
     })
 
     test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({page}) => {
@@ -52,7 +52,7 @@ test.describe.serial('Academybugs Test', () => {
         await productCard.selectProductColor(10)
         await productCard.increaseProductQuantity(1)
 
-        await expect(page.getByRole('heading', { name: 'You found a crash bug' })).toBeVisible();
+        await expect(mainPage.bugMessage).toBeVisible()
     })
 })
 

@@ -1,0 +1,1162 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: Academybugs Test >> The page freezes when clicking on the numbers of results
+- Location: /home/runner/work/findbugs_qa/findbugs_qa/tests/academybugs.test.js:21:9
+
+# Error details
+
+```
+Error: browserType.launch: Target page, context or browser has been closed
+Browser logs:
+
+╔════════════════════════════════════════════════════════════════════════════════════════════════╗
+║ Looks like you launched a headed browser without having a XServer running.                     ║
+║ Set either 'headless: true' or use 'xvfb-run <your-playwright-app>' before running Playwright. ║
+║                                                                                                ║
+║ <3 Playwright Team                                                                             ║
+╚════════════════════════════════════════════════════════════════════════════════════════════════╝
+Call log:
+  - <launching> /home/runner/.cache/ms-playwright/chromium-1161/chrome-linux/chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AutoExpandDetailsElement,AvoidUnnecessaryBeforeUnloadCheckSync,CertificateTransparencyComponentUpdater,DeferRendererTasksAfterInput,DestroyProfileOnBrowserClose,DialMediaRouteProvider,ExtensionManifestV2Disabled,GlobalMediaControls,HttpsUpgrades,ImprovedCookieControls,LazyFrameLoading,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-LYwQS0 --remote-debugging-pipe --no-startup-window
+  - <launched> pid=6114
+  - [pid=6114][err] [6114:6114:0417/173433.290881:ERROR:ozone_platform_x11.cc(245)] Missing X server or $DISPLAY
+  - [pid=6114][err] [6114:6114:0417/173433.290918:ERROR:env.cc(257)] The platform failed to initialize.  Exiting.
+
+```
+
+# Test source
+
+```ts
+   1 | import {expect, test} from "@playwright/test";
+   2 | import {MainPage, ProductsPage, ProductCard, RegisterPage, ForgotPasswordPage, UserCartPage} from '../pages'
+   3 |
+   4 | test.describe.serial('Academybugs Test', () => {
+   5 |     let mainPage
+   6 |     let productsPage
+   7 |     let productCard
+   8 |     let registerPage
+   9 |     let forgotPasswordPage
+  10 |     let userCartPage
+  11 |     test.beforeEach(async ({page}) =>{
+  12 |         mainPage = new MainPage(page);
+  13 |         productsPage = new ProductsPage(page);
+  14 |         productCard = new ProductCard(page);
+  15 |         registerPage = new RegisterPage(page);
+  16 |         forgotPasswordPage = new ForgotPasswordPage(page);
+  17 |         userCartPage = new UserCartPage(page);
+  18 |         await mainPage.openPage()
+  19 |     })
+  20 |
+> 21 |     test('The page freezes when clicking on the numbers of results', async ({}) => {
+     |         ^ Error: browserType.launch: Target page, context or browser has been closed
+  22 |         //Выбираем количество товаров на странице
+  23 |         await productsPage.selectPerPage(50)
+  24 |         await expect(mainPage.bugMessage).toBeVisible()
+  25 |     })
+  26 |
+  27 |     test('The page freezes when changing the currency', async ({page}) => {
+  28 |         //Кликаем на товар
+  29 |         await productsPage.productItem('4481370').click()
+  30 |         await productCard.selectCurrency('gbp')
+  31 |         await expect(mainPage.alternativeBugMessage).toBeVisible()
+  32 |     })
+  33 |
+  34 |     test('The page becomes unresponsive when clicking on "Retrieve Password" and no email is sent', async ({}) => {
+  35 |         await productsPage.productItem('4481370').click()
+  36 |         await productCard.clickSignUpLink()
+  37 |         await registerPage.clickForgotPasswordLink()
+  38 |         await forgotPasswordPage.fillRetrieveEmailField()
+  39 |         await forgotPasswordPage.clickRetrievePasswordButton()
+  40 |         await expect(mainPage.bugMessage).toBeVisible()
+  41 |     })
+  42 |
+  43 |     test('The page becomes unresponsive when clicking on "Post Comment"', async ({}) => {
+  44 |         await productsPage.productItem('4481370').click()
+  45 |         await productCard.fillProductReply()
+  46 |         await expect(mainPage.bugMessage).toBeVisible()
+  47 |     })
+  48 |
+  49 |     test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({}) => {
+  50 |         await productsPage.productItem('4381370').click()
+  51 |         await productCard.selectProductColor('Green')
+  52 |         await productCard.increaseProductQuantity(1)
+  53 |         await expect(mainPage.bugMessage).toBeVisible()
+  54 |     })
+  55 | })
+  56 |
+  57 |
+  58 |
+```
+
+# Local changes
+
+```diff
+diff --git a/.github/workflows/playwright.yml b/.github/workflows/playwright.yml
+new file mode 100644
+index 0000000..df03b35
+--- /dev/null
++++ b/.github/workflows/playwright.yml
+@@ -0,0 +1,72 @@
++name: Playwright Tests
++on:
++  workflow_dispatch:
++  push:
++    branches: [ main, master, findbugs-tests ]
++  pull_request:
++    branches: [ main, master, findbugs-tests ]
++permissions:
++  contents: write  # Нужно для деплоя в gh-pages
++jobs:
++  test:
++    timeout-minutes: 60
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-node@v4
++        with:
++          node-version: lts/*
++      - name: Install dependencies
++        run: npm ci
++      - name: Install Playwright Browsers
++        run: npx playwright install --with-deps
++      # Переменная BASE URL не из env, а из secrets github
++      - name: Set environment variables
++        run: echo "BASE_URL=${{ secrets.BASE_URL }}" >> $GITHUB_ENV
++      - name: Run Playwright tests
++        run: npx playwright test
++
++        # сохраняем отчет pw
++      - uses: actions/upload-artifact@v4
++        if: always()
++        continue-on-error: true
++        with:
++          name: playwright-report
++          path: playwright-report
++          retention-days: 20
++
++      # сохраняем отчет allure
++      - uses: actions/upload-artifact@v4
++        if: always()
++        continue-on-error: true
++        with:
++          name: allure-results
++          path: allure-results
++          retention-days: 20
++
++      # забираем результаты предыдущего запуска отчета allure
++      - uses: actions/checkout@v4
++        if: always()
++        continue-on-error: true
++        with:
++          ref: gh-pages
++          path: gh-pages
++
++      - name: Generate Allure Report
++        if: always()
++        uses: simple-elf/allure-report-action@master
++        id: allure-report
++        with:
++          allure_results: allure-results
++          allure_report: allure-report
++          allure_history: allure-history
++          keep_reports: 20
++
++        # Формируем из allure-results отчет allure-report
++      - name: Deploy report to GitHub Pages
++        if: always()
++        uses: peaceiris/actions-gh-pages@v4
++        with:
++          github_token: ${{ secrets.GITHUB_TOKEN }}
++          publish_dir: allure-history
++          publish_branch: gh-pages
+\ No newline at end of file
+diff --git a/helpers/data-generators.js b/helpers/data-generators.js
+new file mode 100644
+index 0000000..1817d10
+--- /dev/null
++++ b/helpers/data-generators.js
+@@ -0,0 +1,18 @@
++import {faker} from "@faker-js/faker";
++
++
++export class ProductReply{
++    constructor(){
++        this.comment = faker.lorem.sentences({min:1, max:5})
++        this.name = faker.internet.displayName()
++        this.email = faker.internet.email()
++        this.website = faker.internet.url()
++    }
++}
++
++export class AuthorisedUser{
++    constructor() {
++        this.email = faker.internet.email()
++        this.password = faker.internet.password()
++    }
++}
+\ No newline at end of file
+diff --git a/helpers/index.js b/helpers/index.js
+new file mode 100644
+index 0000000..888f3c5
+--- /dev/null
++++ b/helpers/index.js
+@@ -0,0 +1 @@
++export * from './data-generators'
+\ No newline at end of file
+diff --git a/package-lock.json b/package-lock.json
+index 97d797c..58e803c 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1,16 +1,38 @@
+ {
+-  "name": "findbugs_qa",
++  "name": "qaguru_findbugs",
+   "version": "1.0.0",
+   "lockfileVersion": 3,
+   "requires": true,
+   "packages": {
+     "": {
+-      "name": "findbugs_qa",
++      "name": "qaguru_findbugs",
+       "version": "1.0.0",
+       "license": "ISC",
++      "dependencies": {
++        "@faker-js/faker": "^9.6.0",
++        "dotenv": "^16.4.7"
++      },
+       "devDependencies": {
+         "@playwright/test": "^1.51.1",
+-        "@types/node": "^22.14.1"
++        "@types/node": "^22.13.14",
++        "allure-commandline": "^2.33.0",
++        "allure-playwright": "^3.2.1"
++      }
++    },
++    "node_modules/@faker-js/faker": {
++      "version": "9.6.0",
++      "resolved": "https://registry.npmjs.org/@faker-js/faker/-/faker-9.6.0.tgz",
++      "integrity": "sha512-3vm4by+B5lvsFPSyep3ELWmZfE3kicDtmemVpuwl1yH7tqtnHdsA6hG8fbXedMVdkzgtvzWoRgjSB4Q+FHnZiw==",
++      "funding": [
++        {
++          "type": "opencollective",
++          "url": "https://opencollective.com/fakerjs"
++        }
++      ],
++      "license": "MIT",
++      "engines": {
++        "node": ">=18.0.0",
++        "npm": ">=9.0.0"
+       }
+     },
+     "node_modules/@playwright/test": {
+@@ -30,13 +52,86 @@
+       }
+     },
+     "node_modules/@types/node": {
+-      "version": "22.14.1",
+-      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.14.1.tgz",
+-      "integrity": "sha512-u0HuPQwe/dHrItgHHpmw3N2fYCR6x4ivMNbPHRkBVP4CvN+kiRrKHWk3i8tXiO/joPwXLMYvF9TTF0eqgHIuOw==",
++      "version": "22.13.14",
++      "resolved": "https://registry.npmjs.org/@types/node/-/node-22.13.14.tgz",
++      "integrity": "sha512-Zs/Ollc1SJ8nKUAgc7ivOEdIBM8JAKgrqqUYi2J997JuKO7/tpQC+WCetQ1sypiKCQWHdvdg9wBNpUPEWZae7w==",
+       "dev": true,
+       "license": "MIT",
+       "dependencies": {
+-        "undici-types": "~6.21.0"
++        "undici-types": "~6.20.0"
++      }
++    },
++    "node_modules/allure-commandline": {
++      "version": "2.33.0",
++      "resolved": "https://registry.npmjs.org/allure-commandline/-/allure-commandline-2.33.0.tgz",
++      "integrity": "sha512-oGMW1Zaqd9SqYJHUqeET1AP363guQkswnCKD+6jSX9YCK8BbttSqZJy9PeSmJtU16uW3qGB6cvgrvJwKUWG5Ew==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "bin": {
++        "allure": "bin/allure"
++      }
++    },
++    "node_modules/allure-js-commons": {
++      "version": "3.2.1",
++      "resolved": "https://registry.npmjs.org/allure-js-commons/-/allure-js-commons-3.2.1.tgz",
++      "integrity": "sha512-VGLv6u3I9NIm649dYmGpG3X5sOnI0tt7K1WYTVZPiEpnsxBbFEfDr6yAI7q509WWw/5g0VBCEtGEspd6AoYOqA==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "md5": "^2.3.0"
++      },
++      "peerDependencies": {
++        "allure-playwright": "3.2.1"
++      },
++      "peerDependenciesMeta": {
++        "allure-playwright": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/allure-playwright": {
++      "version": "3.2.1",
++      "resolved": "https://registry.npmjs.org/allure-playwright/-/allure-playwright-3.2.1.tgz",
++      "integrity": "sha512-IO0lDDz007hlaHH8hZzrvyaw0NR6ZOGBEPI/ANUGbBizFOXcDf9J/nHDCdsNrt/Qa13H4AGGU7sDjtng1evYgA==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "dependencies": {
++        "allure-js-commons": "3.2.1"
++      },
++      "peerDependencies": {
++        "@playwright/test": ">=1.36.0"
++      }
++    },
++    "node_modules/charenc": {
++      "version": "0.0.2",
++      "resolved": "https://registry.npmjs.org/charenc/-/charenc-0.0.2.tgz",
++      "integrity": "sha512-yrLQ/yVUFXkzg7EDQsPieE/53+0RlaWTs+wBrvW36cyilJ2SaDWfl4Yj7MtLTXleV9uEKefbAGUPv2/iWSooRA==",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "engines": {
++        "node": "*"
++      }
++    },
++    "node_modules/crypt": {
++      "version": "0.0.2",
++      "resolved": "https://registry.npmjs.org/crypt/-/crypt-0.0.2.tgz",
++      "integrity": "sha512-mCxBlsHFYh9C+HVpiEacem8FEBnMXgU9gy4zmNC+SXAZNB/1idgp/aulFJ4FgCi7GPEVbfyng092GqL2k2rmow==",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "engines": {
++        "node": "*"
++      }
++    },
++    "node_modules/dotenv": {
++      "version": "16.4.7",
++      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-16.4.7.tgz",
++      "integrity": "sha512-47qPchRCykZC03FhkYAhrvwU4xDBFIj1QPqaarj6mdM/hgUzfPHcpkHJOn3mJAufFeeAxAzeGsr5X0M4k6fLZQ==",
++      "license": "BSD-2-Clause",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://dotenvx.com"
+       }
+     },
+     "node_modules/fsevents": {
+@@ -54,6 +149,25 @@
+         "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
+       }
+     },
++    "node_modules/is-buffer": {
++      "version": "1.1.6",
++      "resolved": "https://registry.npmjs.org/is-buffer/-/is-buffer-1.1.6.tgz",
++      "integrity": "sha512-NcdALwpXkTm5Zvvbk7owOUSvVvBKDgKP5/ewfXEznmQFfs4ZRmanOeKBTjRVjka3QFoN6XJ+9F3USqfHqTaU5w==",
++      "dev": true,
++      "license": "MIT"
++    },
++    "node_modules/md5": {
++      "version": "2.3.0",
++      "resolved": "https://registry.npmjs.org/md5/-/md5-2.3.0.tgz",
++      "integrity": "sha512-T1GITYmFaKuO91vxyoQMFETst+O71VUPEU3ze5GNzDm0OWdP8v1ziTaAEPUr/3kLsY3Sftgz242A1SetQiDL7g==",
++      "dev": true,
++      "license": "BSD-3-Clause",
++      "dependencies": {
++        "charenc": "0.0.2",
++        "crypt": "0.0.2",
++        "is-buffer": "~1.1.6"
++      }
++    },
+     "node_modules/playwright": {
+       "version": "1.51.1",
+       "resolved": "https://registry.npmjs.org/playwright/-/playwright-1.51.1.tgz",
+@@ -87,9 +201,9 @@
+       }
+     },
+     "node_modules/undici-types": {
+-      "version": "6.21.0",
+-      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.21.0.tgz",
+-      "integrity": "sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==",
++      "version": "6.20.0",
++      "resolved": "https://registry.npmjs.org/undici-types/-/undici-types-6.20.0.tgz",
++      "integrity": "sha512-Ny6QZ2Nju20vw1SRHe3d9jVu6gJ+4e3+MMpqu7pqE5HT6WsTSlce++GQmK5UXS8mzV8DSYHrQH+Xrf2jVcuKNg==",
+       "dev": true,
+       "license": "MIT"
+     }
+diff --git a/package.json b/package.json
+index d3c17f7..1d09c07 100644
+--- a/package.json
++++ b/package.json
+@@ -1,15 +1,25 @@
+ {
+-  "name": "findbugs_qa",
++  "name": "qaguru_findbugs",
+   "version": "1.0.0",
+   "description": "",
+   "main": "index.js",
+-  "scripts": {},
++  "scripts": {
++    "test": "playwright test",
++    "allure:generate": "npx allure generate allure-results --clean -o allure-report",
++    "allure:open": "npx allure open allure-report"
++  },
+   "keywords": [],
+   "author": "",
+   "license": "ISC",
+   "type": "commonjs",
+   "devDependencies": {
+     "@playwright/test": "^1.51.1",
+-    "@types/node": "^22.14.1"
++    "@types/node": "^22.13.14",
++    "allure-commandline": "^2.33.0",
++    "allure-playwright": "^3.2.1"
++  },
++  "dependencies": {
++    "@faker-js/faker": "^9.6.0",
++    "dotenv": "^16.4.7"
+   }
+ }
+diff --git a/pages/forgot-password-page.js b/pages/forgot-password-page.js
+new file mode 100644
+index 0000000..64f3292
+--- /dev/null
++++ b/pages/forgot-password-page.js
+@@ -0,0 +1,29 @@
++import {AuthorisedUser} from "../helpers";
++
++export class ForgotPasswordPage {
++    constructor(page) {
++        this.page = page;
++        this.userData = new AuthorisedUser()
++
++        // Элементы формы восстановления пароля
++        this.emailInput = page.locator('#ec_account_forgot_password_email');
++        this.retrievePasswordButton = page.locator('input[value="RETRIEVE PASSWORD"]');
++
++        // Элементы формы входа
++        this.loginEmailInput = page.locator('#ec_account_login_email');
++        this.loginPasswordInput = page.locator('#ec_account_login_password');
++        this.signInButton = page.locator('input[value="SIGN IN"]');
++    }
++
++    async clickRetrievePasswordButton() {
++        await this.retrievePasswordButton.click();
++    }
++
++    async signInButtonClick() {
++        await this.signInButton.click();
++    }
++
++    async fillRetrieveEmailField(){
++        await this.emailInput.fill(this.userData.email);
++    }
++}
+\ No newline at end of file
+diff --git a/pages/index.js b/pages/index.js
+new file mode 100644
+index 0000000..f8665f3
+--- /dev/null
++++ b/pages/index.js
+@@ -0,0 +1,6 @@
++export * from './main-page'
++export * from './products-page'
++export * from './product-card'
++export * from './register-page'
++export * from './forgot-password-page'
++export * from './user-cart-page'
+\ No newline at end of file
+diff --git a/pages/main-page.js b/pages/main-page.js
+new file mode 100644
+index 0000000..1712762
+--- /dev/null
++++ b/pages/main-page.js
+@@ -0,0 +1,14 @@
++require('dotenv').config();
++
++export class MainPage{
++    constructor(page){
++        this.page = page;
++        this.bugMessage = this.page.getByRole('heading', { name: 'You found a crash bug' })
++        this.alternativeBugMessage = this.page
++            .getByRole('heading', { name: 'You found a crash bug, examine the page for 5 seconds' })
++            .first();    }
++
++    async openPage(){
++        await this.page.goto(process.env.BASE_URL);
++    }
++}
+diff --git a/pages/product-card.js b/pages/product-card.js
+new file mode 100644
+index 0000000..4ec5734
+--- /dev/null
++++ b/pages/product-card.js
+@@ -0,0 +1,175 @@
++import {ProductReply} from "../helpers";
++
++/**
++ * Карточка товара
++ */
++export class ProductCard {
++    constructor(page) {
++        this.page = page;
++
++        // Локаторы для элементов карточки продукта
++        this.productImage = page.locator('.product-card__image');
++        this.productName = page.locator('.product-card__name');
++        this.productPrice = page.locator('.product-card__price');
++        this.addToCartButton = page.locator('.product-card__add-to-cart');
++        this.favoriteButton = page.locator('.product-card__favorite');
++
++        //Локатор для выбора цвета товара
++        this.colorItem = (optionItemId) =>
++            page.locator(`.ec_details_swatches.ec_details_html_swatches li.ec_details_swatch[data-optionitem-id="${optionItemId}"]`);
++        this.colorItemButton = (color) => page.getByRole('img', {'name':color})
++
++        // Локатор для выпадающего списка валют
++        this.currencySelect = page.locator('#ec_currency_conversion');
++
++        //Локаторы для публикации комментария
++        this.commentTextarea = page.locator('#comment');
++        this.authorInput = page.locator('#author');
++        this.emailInput = page.locator('#email');
++        this.websiteInput = page.locator('#url');
++        this.submitButton = page.locator('#submit');
++
++        //Локаторы для авторизации под карточкой товара
++        this.authEmailInput = page.locator('#ec_account_login_widget_email');
++        this.authPasswordInput = page.locator('#ec_account_login_widget_password');
++        this.signInButton = page.locator('.ec_login_widget_button.ec-widget-login');
++        this.signUpLink = page.locator('a[href*="register"]');
++
++        //Локаторы для выбора количества товара
++        this.minusProductQuantityButton = page.locator('.ec_minus');
++        this.plusProductQuantityButton = page.locator('.ec_plus');
++        this.quantityInputField = page.locator('.product-card__quantity-input');
++
++    }
++
++    /**
++     * Получить название продукта
++     * @returns {Promise<string>}
++     */
++    async getProductName() {
++        return await this.productName.textContent();
++    }
++
++    /**
++     * Получить цену продукта
++     * @returns {Promise<string>}
++     */
++    async getProductPrice() {
++        return await this.productPrice.textContent();
++    }
++
++    /**
++     * Добавить продукт в корзину
++     */
++    async addToCart() {
++        await this.addToCartButton.click();
++    }
++
++    /**
++     * Установить количество товара
++     * @param {number} quantity - Количество товара
++     */
++    async setQuantity(quantity) {
++        await this.quantityInputField.fill(quantity.toString());
++    }
++
++    /**
++     * Нажать на кнопку "Добавить в избранное"
++     */
++    async clickFavoriteButton() {
++        await this.favoriteButton.click();
++    }
++
++    /**
++     * Выбор валюты для оплаты из списка.
++     * На вход принимает 4 валюты: USD, EUR, GBP, JPY, на остальных падает ошибка
++     * @param currency
++     * @returns {Promise<void>}
++     */
++    async selectCurrency(currency) {
++        let validCurrency;
++
++        switch (currency.toUpperCase()) {
++            case 'USD':
++            case 'EUR':
++            case 'GBP':
++            case 'JPY':
++                validCurrency = currency.toUpperCase();
++                break;
++            default:
++                throw new Error(`Недопустимая валюта: ${currency}. Допустимые значения: USD, EUR, GBP, JPY`);
++        }
++        await this.currencySelect.click();
++        await this.page.waitForLoadState();
++        await this.currencySelect.selectOption(validCurrency);
++        await this.currencySelect.dispatchEvent('change');
++    }
++
++    /**
++     * Оставить комментарий под товаром
++     * @returns {Promise<void>}
++     */
++    async fillProductReply(){
++        let productReply = new ProductReply()
++        await this.authorInput.fill(productReply.name)
++        await this.emailInput.fill(productReply.email)
++        await this.websiteInput.fill(productReply.website)
++        await this.submitButton.click()
++
++    }
++
++    /**
++     *Нажать на кнопку Sign In (Авторизация)
++     */
++    async clickSignInButton() {
++        await this.signInButton.click();
++    }
++
++    /**
++     *Нажать на ссылку Sign Up (Регистрация)
++     */
++    async clickSignUpLink() {
++        await this.signUpLink.click();
++    }
++
++    /**
++     * Выбор цвета товара по его ID
++     * @param color
++     * @returns {Promise<void>}
++     */
++    async selectProductColor(color){
++        //Добавил ожидание загрузки картинки нового цвета, чтобы тест не падал если элемент не успел прогрузиться -
++        // заменил этим ранее добавленный таймаут в 6 секунд
++        await this.page.waitForResponse(response => {
++            const url = response.url();
++            //Проверяю что то, что после последнего слеша в адресе соответствует маске. Не совсем понял,
++            // почему глобальная переменная пишется через $, надо будет поподробнее почитать про них
++            return /\/([^/]+\.png)$/.test(url) && RegExp.$1 === `${color.toLowerCase()}.png`;
++        });
++
++        await this.colorItemButton(color).click()
++
++    }
++
++    /**
++     * Увеличивает количество товара через кнопку "+"
++     * @param times - количество нажатий на кнопку
++     * @returns {Promise<void>}
++     */
++    async increaseProductQuantity(times = 1) {
++        for (let i = 0; i < times; i++) {
++            await this.plusProductQuantityButton.click();
++        }
++    }
++
++    /**
++     * Уменьшает количество товара через кнопку "-"
++     * @param times - количество нажатий на кнопку
++     * @returns {Promise<void>}
++     */
++    async decreaseProductQuantity(times = 1) {
++        for (let i = 0; i < times; i++) {
++            await this.minusProductQuantityButton.click();
++        }
++    }
++}
+\ No newline at end of file
+diff --git a/pages/products-page.js b/pages/products-page.js
+new file mode 100644
+index 0000000..2cdefe6
+--- /dev/null
++++ b/pages/products-page.js
+@@ -0,0 +1,150 @@
++export class ProductsPage {
++    constructor(page) {
++        this.page = page;
++
++        // Локаторы блока сортировки
++        this.perPage10Link = this.page.locator('.what-we-offer-pagination-link').filter({ hasText: '10' });
++        this.perPage25Link = this.page.locator('.ec_selected').filter({ hasText: '25' });
++        this.perPage50Link = this.page.locator('.what-we-offer-pagination-link').filter({ hasText: '50' });
++        this.showingResultsText = this.page.locator('.ec_product_page_showing');
++        this.sortDropdown = this.page.locator('#sortfield');
++
++        //Локатор списка товаров
++        this.productList = this.page.locator('#ec_store_product_list');
++
++        // Локаторы для карточки товара
++        this.productItem = (productId) => this.page.locator(`#ec_product_li_${productId}`);
++        this.productTitle = (productId) => this.productItem(productId).locator('.ec_product_title a');
++        this.productPrice = (productId) => this.productItem(productId).locator('.ec_price');
++        this.productListPrice = (productId) => this.productItem(productId).locator('.ec_list_price');
++        this.successBanner = (productId) => this.productItem(productId).locator('.ec_product_successfully_added');
++
++        // Кнопки внутри карточки товара
++        this.addToCartButton = (productId) =>
++            this.productItem(productId).locator('a:has-text("ADD TO CART")').first();
++        this.checkoutNowButton = (productId) =>
++            this.productItem(productId).locator('a.ec_added_to_cart_button').first();
++        this.selectOptionsButton = (productId) =>
++            this.productItem(productId).locator('a:has-text("Select Options")').first();
++    }
++
++    /**
++     * Метод для выбора количества элементов на странице.
++     * @param option - количество товаров на странице. Допустимое количество - 10, 25, 50
++     * @returns {Promise<void>}
++     */
++    async selectPerPage(option) {
++        switch (option) {
++            case 10:
++                await this.perPage10Link.click();
++                break;
++            case 25:
++                await this.perPage25Link.click();
++                break;
++            case 50:
++                await this.perPage50Link.click();
++                break;
++            default:
++                throw new Error(`Invalid per-page option: ${option}`);
++        }
++    }
++
++    /**
++     * Метод для выбора типа сортировки
++     * @param sortValue
++     * @returns {Promise<void>}
++     */
++    async selectSortOption(sortValue) {
++        // Проверяю значение на допустимость
++        if (![0, 1, 2, 3, 4, 5, 6, 7, 8].includes(sortValue)) {
++            throw new Error(`Invalid sort value: ${sortValue}`);
++        }
++
++        // Выбираем сортировку в зависимости от выбранного значения
++        await this.sortDropdown.selectOption({ value: String(sortValue) });
++    }
++
++    /**
++     * Получение названия товара
++     * @param productId
++     * @returns {Promise<*>}
++     */
++    async getProductTitle(productId) {
++        return await this.productTitle(productId).textContent();
++    }
++
++    /**
++     * Получение текущей цены товара
++     * @param productId
++     * @returns {Promise<*>}
++     */
++    async getProductPrice(productId) {
++        return await this.productPrice(productId).textContent();
++    }
++
++    /**
++     * Получение старой цены товара (при наличии)
++     * @param productId
++     * @returns {Promise<*|null>}
++     */
++    async getProductListPrice(productId) {
++        const listPrice = this.productListPrice(productId);
++        if (await listPrice.isVisible()) {
++            return await listPrice.textContent();
++        }
++        return null;
++    }
++
++    /**
++     * Добавление товара в корзину
++     * @param productId
++     * @returns {Promise<boolean>}
++     */
++    async addToCart(productId) {
++        const addToCartButton = this.addToCartButton(productId);
++        if (await addToCartButton.isVisible()) {
++            await addToCartButton.click();
++            await this.loaderMessage(productId).waitFor({ state: 'hidden' }); // Ждем завершения загрузки
++            return true;
++        }
++        return false;
++    }
++
++    /**
++     * Переход к оформлению заказа
++     * @param productId
++     * @returns {Promise<boolean>}
++     */
++    async checkoutNow(productId) {
++        const checkoutNowButton = this.checkoutNowButton(productId);
++        if (await checkoutNowButton.isVisible()) {
++            await checkoutNowButton.click();
++            return true;
++        }
++        return false;
++    }
++
++    /**
++     * Выбор опций товара (кнопка вместо добавления товара в корзину)
++     * @param productId
++     * @returns {Promise<boolean>}
++     */
++    async selectProductOptions(productId) {
++        const selectOptionsButton = this.selectOptionsButton(productId);
++        if (await selectOptionsButton.isVisible()) {
++            await selectOptionsButton.click();
++            return true;
++        }
++        return false;
++    }
++
++    /**
++     * Проверка добавления товара в корзину
++     * @param productId
++     * @returns {Promise<*>}
++     */
++    async isSuccessMessageVisible(productId) {
++        const successMessage = this.successMessage(productId);
++        return await successMessage.isVisible();
++    }
++}
+\ No newline at end of file
+diff --git a/pages/register-page.js b/pages/register-page.js
+new file mode 100644
+index 0000000..c8c0135
+--- /dev/null
++++ b/pages/register-page.js
+@@ -0,0 +1,47 @@
++export class RegisterPage{
++    constructor(page) {
++        this.page = page;
++
++        // Форма регистрации
++        this.registerForm = page.locator('#ec_account_register');
++        this.firstNameInput = page.locator('#ec_account_register_first_name');
++        this.lastNameInput = page.locator('#ec_account_register_last_name');
++        this.emailInput = page.locator('#ec_account_register_email');
++        this.retypeEmailInput = page.locator('#ec_account_register_retype_email');
++        this.passwordInput = page.locator('#ec_account_register_password');
++        this.retypePasswordInput = page.locator('#ec_account_register_password_retype');
++        this.subscribeCheckbox = page.locator('#ec_account_register_is_subscriber');
++        this.registerButton = page.locator('.ec_account_button[type="submit"]');
++
++        // Форма входа
++        this.loginForm = page.locator('.ec_cart_right form');
++        this.loginEmailInput = page.locator('#ec_account_login_email');
++        this.loginPasswordInput = page.locator('#ec_account_login_password');
++        this.forgotPasswordLink = page.locator('.ec_account_login_link');
++        this.signInButton = this.loginForm.locator('.ec_account_button[type="submit"]');
++    }
++
++
++    async fillRegistrationForm(data) {
++        await this.firstNameInput.fill(data.firstName);
++        await this.lastNameInput.fill(data.lastName);
++        await this.emailInput.fill(data.email);
++        await this.retypeEmailInput.fill(data.email);
++        await this.passwordInput.fill(data.password);
++        await this.retypePasswordInput.fill(data.password);
++        if (data.subscribe) {
++            await this.subscribeCheckbox.check();
++        }
++        await this.registerButton.click();
++    }
++
++    async login(email, password) {
++        await this.loginEmailInput.fill(email);
++        await this.loginPasswordInput.fill(password);
++        await this.signInButton.click();
++    }
++
++    async clickForgotPasswordLink() {
++        await this.forgotPasswordLink.click();
++    }
++}
+\ No newline at end of file
+diff --git a/pages/user-cart-page.js b/pages/user-cart-page.js
+new file mode 100644
+index 0000000..cee19db
+--- /dev/null
++++ b/pages/user-cart-page.js
+@@ -0,0 +1,119 @@
++export class UserCartPage {
++    constructor(page) {
++        this.page = page;
++
++        // Хлебные крошки
++        this.breadcrumbs = page.locator('.ec_cart_breadcrumbs');
++        this.shoppingCartBreadcrumb = page.locator('.ec_cart_breadcrumb').nth(0);
++        this.checkoutDetailsBreadcrumb = page.locator('.ec_cart_breadcrumb').nth(1);
++        this.submitPaymentBreadcrumb = page.locator('.ec_cart_breadcrumb').nth(2);
++
++        // Карточки товаров
++        this.cartTable = page.locator('.ec_cart');
++            // Общий селект��р для всех строк товаров - для поиска нужного товара в корзине
++        this.cartItemRows = page.locator('.ec_cartitem_row');
++
++        // Расчеты стоимости корзины
++        this.cartTotalsHeader = page.locator('.ec_cart_header.ec_top');
++        this.cartSubtotal = page.locator('#ec_cart_subtotal');
++        this.cartShipping = page.locator('#ec_cart_shipping');
++        this.cartGrandTotal = page.locator('#ec_cart_total');
++
++        // Кнопки "Checkout" и "Shopping"
++        this.checkoutButton = page.locator('.ec_cart_button_checkout');
++        this.continueShoppingButton = page.locator('.ec_cart_button_shopping');
++
++        // Промокод
++        this.couponInput = page.locator('#ec_coupon_code');
++        this.applyCouponButton = page.locator('#ec_apply_coupon');
++
++        // Подарочная карта
++        this.giftCardInput = page.locator('#ec_gift_card');
++        this.redeemGiftCardButton = page.locator('#ec_apply_gift_card');
++    }
++
++    /**
++     * Получить локатор товара
++     * @param itemName - название товара
++     */
++    async getCartItemLocator(itemName) {
++        return this.cartItemRows.filter({ hasText: itemName });
++    }
++
++    /**
++     * Удалить товар из корзины
++     * @param itemName - название товара
++     * */
++    async removeCartItem(itemName) {
++        const itemRow = await this.getCartItemLocator(itemName);
++        await itemRow.locator('.ec_cartitem_delete').click();
++    }
++
++    /**
++     * Изменить количество товара (ввод значения в поле количества)
++     * @param itemName - название товара
++     * @param quantity - количество товара
++     * @returns {Promise<void>}
++     */
++    async updateCartItemQuantity(itemName, quantity) {
++        const itemRow = await this.getCartItemLocator(itemName);
++        await itemRow.locator('.ec_quantity').fill(quantity.toString());
++        await itemRow.locator('.ec_cartitem_update_button').click();
++    }
++
++    /**
++     * Получить стоимость одной единицы товара
++     * @param itemName - название товара
++     * @returns {Promise<*>}
++     */
++    async getItemPrice(itemName) {
++        const itemRow = await this.getCartItemLocator(itemName);
++        return await itemRow.locator('.ec_cartitem_price').innerText();
++    }
++
++    /**
++     * Получить общую стоимость товара
++     * @param itemName - название товара
++     * @returns {Promise<*>}
++     */
++    async getItemTotal(itemName) {
++        const itemRow = await this.getCartItemLocator(itemName);
++        return await itemRow.locator('.ec_cartitem_total').innerText();
++    }
++
++    /**
++     * Применить промокод
++     * @param couponCode - промокод
++     * @returns {Promise<void>}
++     */
++    async applyCoupon(couponCode) {
++        await this.couponInput.fill(couponCode);
++        await this.applyCouponButton.click();
++    }
++
++    /**
++     * Применить подарочную карту
++     * @param giftCardCode - подарочная карта
++     * @returns {Promise<void>}
++     */
++    async redeemGiftCard(giftCardCode) {
++        await this.giftCardInput.fill(giftCardCode);
++        await this.redeemGiftCardButton.click();
++    }
++
++    /**
++     * Перейти к оформлению заказа
++     * @returns {Promise<void>}
++     */
++    async proceedToCheckout() {
++        await this.checkoutButton.click();
++    }
++
++    /**
++     * Вернуться к каталогу товаров
++     * @returns {Promise<void>}
++     */
++    async continueShopping() {
++        await this.continueShoppingButton.click();
++    }
++}
+\ No newline at end of file
+diff --git a/playwright.config.js b/playwright.config.js
+index eefe573..f45cd4a 100644
+--- a/playwright.config.js
++++ b/playwright.config.js
+@@ -1,14 +1,6 @@
+ // @ts-check
+ import { defineConfig, devices } from '@playwright/test';
+ 
+-/**
+- * Read environment variables from file.
+- * https://github.com/motdotla/dotenv
+- */
+-// import dotenv from 'dotenv';
+-// import path from 'path';
+-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+-
+ /**
+  * @see https://playwright.dev/docs/test-configuration
+  */
+@@ -23,7 +15,13 @@ export default defineConfig({
+   /* Opt out of parallel tests on CI. */
+   workers: process.env.CI ? 1 : undefined,
+   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+-  reporter: 'html',
++  reporter: [
++    ['html'],
++    ['allure-playwright', { outputFolder: 'allure-results' }]
++  ],
++  /*Добавил таймаут в 1 минуту */
++  timeout: 60000,
++
+   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+   use: {
+     /* Base URL to use in actions like `await page.goto('/')`. */
+@@ -31,6 +29,10 @@ export default defineConfig({
+ 
+     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+     trace: 'on-first-retry',
++
++
++    /* Включение режима с графическим интерфейсом */
++    headless: false,
+   },
+ 
+   /* Configure projects for major browsers */
+@@ -38,44 +40,10 @@ export default defineConfig({
+     {
+       name: 'chromium',
+       use: { ...devices['Desktop Chrome'] },
+-    },
+-
+-    {
+-      name: 'firefox',
+-      use: { ...devices['Desktop Firefox'] },
+-    },
+-
+-    {
+-      name: 'webkit',
+-      use: { ...devices['Desktop Safari'] },
+-    },
++    }
+ 
+-    /* Test against mobile viewports. */
+-    // {
+-    //   name: 'Mobile Chrome',
+-    //   use: { ...devices['Pixel 5'] },
+-    // },
+-    // {
+-    //   name: 'Mobile Safari',
+-    //   use: { ...devices['iPhone 12'] },
+-    // },
+ 
+-    /* Test against branded browsers. */
+-    // {
+-    //   name: 'Microsoft Edge',
+-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
+-    // },
+-    // {
+-    //   name: 'Google Chrome',
+-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+-    // },
+   ],
+ 
+-  /* Run your local dev server before starting the tests */
+-  // webServer: {
+-  //   command: 'npm run start',
+-  //   url: 'http://127.0.0.1:3000',
+-  //   reuseExistingServer: !process.env.CI,
+-  // },
+ });
+ 
+diff --git a/tests/academybugs.test.js b/tests/academybugs.test.js
+new file mode 100644
+index 0000000..fc2d7e0
+--- /dev/null
++++ b/tests/academybugs.test.js
+@@ -0,0 +1,57 @@
++import {expect, test} from "@playwright/test";
++import {MainPage, ProductsPage, ProductCard, RegisterPage, ForgotPasswordPage, UserCartPage} from '../pages'
++
++test.describe.serial('Academybugs Test', () => {
++    let mainPage
++    let productsPage
++    let productCard
++    let registerPage
++    let forgotPasswordPage
++    let userCartPage
++    test.beforeEach(async ({page}) =>{
++        mainPage = new MainPage(page);
++        productsPage = new ProductsPage(page);
++        productCard = new ProductCard(page);
++        registerPage = new RegisterPage(page);
++        forgotPasswordPage = new ForgotPasswordPage(page);
++        userCartPage = new UserCartPage(page);
++        await mainPage.openPage()
++    })
++
++    test('The page freezes when clicking on the numbers of results', async ({}) => {
++        //Выбираем количество товаров на странице
++        await productsPage.selectPerPage(50)
++        await expect(mainPage.bugMessage).toBeVisible()
++    })
++
++    test('The page freezes when changing the currency', async ({page}) => {
++        //Кликаем на товар
++        await productsPage.productItem('4481370').click()
++        await productCard.selectCurrency('gbp')
++        await expect(mainPage.alternativeBugMessage).toBeVisible()
++    })
++
++    test('The page becomes unresponsive when clicking on "Retrieve Password" and no email is sent', async ({}) => {
++        await productsPage.productItem('4481370').click()
++        await productCard.clickSignUpLink()
++        await registerPage.clickForgotPasswordLink()
++        await forgotPasswordPage.fillRetrieveEmailField()
++        await forgotPasswordPage.clickRetrievePasswordButton()
++        await expect(mainPage.bugMessage).toBeVisible()
++    })
++
++    test('The page becomes unresponsive when clicking on "Post Comment"', async ({}) => {
++        await productsPage.productItem('4481370').click()
++        await productCard.fillProductReply()
++        await expect(mainPage.bugMessage).toBeVisible()
++    })
++
++    test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({}) => {
++        await productsPage.productItem('4381370').click()
++        await productCard.selectProductColor('Green')
++        await productCard.increaseProductQuantity(1)
++        await expect(mainPage.bugMessage).toBeVisible()
++    })
++})
++
++
+```

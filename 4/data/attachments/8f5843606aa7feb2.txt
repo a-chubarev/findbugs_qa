@@ -1,0 +1,94 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: Academybugs Test >> The page freezes when clicking on the numbers of results
+- Location: /home/runner/work/findbugs_qa/findbugs_qa/tests/academybugs.test.js:21:9
+
+# Error details
+
+```
+Error: browserType.launch: Target page, context or browser has been closed
+Browser logs:
+
+╔════════════════════════════════════════════════════════════════════════════════════════════════╗
+║ Looks like you launched a headed browser without having a XServer running.                     ║
+║ Set either 'headless: true' or use 'xvfb-run <your-playwright-app>' before running Playwright. ║
+║                                                                                                ║
+║ <3 Playwright Team                                                                             ║
+╚════════════════════════════════════════════════════════════════════════════════════════════════╝
+Call log:
+  - <launching> /home/runner/.cache/ms-playwright/chromium-1161/chrome-linux/chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AutoExpandDetailsElement,AvoidUnnecessaryBeforeUnloadCheckSync,CertificateTransparencyComponentUpdater,DeferRendererTasksAfterInput,DestroyProfileOnBrowserClose,DialMediaRouteProvider,ExtensionManifestV2Disabled,GlobalMediaControls,HttpsUpgrades,ImprovedCookieControls,LazyFrameLoading,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-6OSp9e --remote-debugging-pipe --no-startup-window
+  - <launched> pid=6086
+  - [pid=6086][err] [6086:6086:0417/173456.482926:ERROR:ozone_platform_x11.cc(245)] Missing X server or $DISPLAY
+  - [pid=6086][err] [6086:6086:0417/173456.482964:ERROR:env.cc(257)] The platform failed to initialize.  Exiting.
+
+```
+
+# Test source
+
+```ts
+   1 | import {expect, test} from "@playwright/test";
+   2 | import {MainPage, ProductsPage, ProductCard, RegisterPage, ForgotPasswordPage, UserCartPage} from '../pages'
+   3 |
+   4 | test.describe.serial('Academybugs Test', () => {
+   5 |     let mainPage
+   6 |     let productsPage
+   7 |     let productCard
+   8 |     let registerPage
+   9 |     let forgotPasswordPage
+  10 |     let userCartPage
+  11 |     test.beforeEach(async ({page}) =>{
+  12 |         mainPage = new MainPage(page);
+  13 |         productsPage = new ProductsPage(page);
+  14 |         productCard = new ProductCard(page);
+  15 |         registerPage = new RegisterPage(page);
+  16 |         forgotPasswordPage = new ForgotPasswordPage(page);
+  17 |         userCartPage = new UserCartPage(page);
+  18 |         await mainPage.openPage()
+  19 |     })
+  20 |
+> 21 |     test('The page freezes when clicking on the numbers of results', async ({}) => {
+     |         ^ Error: browserType.launch: Target page, context or browser has been closed
+  22 |         //Выбираем количество товаров на странице
+  23 |         await productsPage.selectPerPage(50)
+  24 |         await expect(mainPage.bugMessage).toBeVisible()
+  25 |     })
+  26 |
+  27 |     test('The page freezes when changing the currency', async ({page}) => {
+  28 |         //Кликаем на товар
+  29 |         await productsPage.productItem('4481370').click()
+  30 |         await productCard.selectCurrency('gbp')
+  31 |         await expect(mainPage.alternativeBugMessage).toBeVisible()
+  32 |     })
+  33 |
+  34 |     test('The page becomes unresponsive when clicking on "Retrieve Password" and no email is sent', async ({}) => {
+  35 |         await productsPage.productItem('4481370').click()
+  36 |         await productCard.clickSignUpLink()
+  37 |         await registerPage.clickForgotPasswordLink()
+  38 |         await forgotPasswordPage.fillRetrieveEmailField()
+  39 |         await forgotPasswordPage.clickRetrievePasswordButton()
+  40 |         await expect(mainPage.bugMessage).toBeVisible()
+  41 |     })
+  42 |
+  43 |     test('The page becomes unresponsive when clicking on "Post Comment"', async ({}) => {
+  44 |         await productsPage.productItem('4481370').click()
+  45 |         await productCard.fillProductReply()
+  46 |         await expect(mainPage.bugMessage).toBeVisible()
+  47 |     })
+  48 |
+  49 |     test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({}) => {
+  50 |         await productsPage.productItem('4381370').click()
+  51 |         await productCard.selectProductColor('Green')
+  52 |         await productCard.increaseProductQuantity(1)
+  53 |         await expect(mainPage.bugMessage).toBeVisible()
+  54 |     })
+  55 | })
+  56 |
+  57 |
+  58 |
+```

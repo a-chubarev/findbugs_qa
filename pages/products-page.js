@@ -26,8 +26,6 @@ export class ProductsPage {
             this.productItem(productId).locator('a.ec_added_to_cart_button').first();
         this.selectOptionsButton = (productId) =>
             this.productItem(productId).locator('a:has-text("Select Options")').first();
-
-
     }
 
     /**

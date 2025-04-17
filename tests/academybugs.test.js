@@ -18,7 +18,7 @@ test.describe.serial('Academybugs Test', () => {
         await mainPage.openPage()
     })
 
-    test('The page freezes when clicking on the numbers of results', async ({page}) => {
+    test('The page freezes when clicking on the numbers of results', async ({}) => {
         //Выбираем количество товаров на странице
         await productsPage.selectPerPage(50)
         await expect(mainPage.bugMessage).toBeVisible()
@@ -27,11 +27,11 @@ test.describe.serial('Academybugs Test', () => {
     test('The page freezes when changing the currency', async ({page}) => {
         //Кликаем на товар
         await productsPage.productItem('4481370').click()
-        await productCard.selectCurrency('eur')
-        await expect(mainPage.bugMessage).toBeVisible()
+        await productCard.selectCurrency('gbp')
+        await expect(mainPage.alternativeBugMessage).toBeVisible()
     })
 
-    test('The page becomes unresponsive when clicking on "Retrieve Password" and no email is sent', async ({page}) => {
+    test('The page becomes unresponsive when clicking on "Retrieve Password" and no email is sent', async ({}) => {
         await productsPage.productItem('4481370').click()
         await productCard.clickSignUpLink()
         await registerPage.clickForgotPasswordLink()
@@ -40,13 +40,13 @@ test.describe.serial('Academybugs Test', () => {
         await expect(mainPage.bugMessage).toBeVisible()
     })
 
-    test('The page becomes unresponsive when clicking on "Post Comment"', async ({page}) => {
+    test('The page becomes unresponsive when clicking on "Post Comment"', async ({}) => {
         await productsPage.productItem('4481370').click()
         await productCard.fillProductReply()
         await expect(mainPage.bugMessage).toBeVisible()
     })
 
-    test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({page}) => {
+    test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({}) => {
         await productsPage.productItem('4381370').click()
         await productCard.selectProductColor('Green')
         await productCard.increaseProductQuantity(1)

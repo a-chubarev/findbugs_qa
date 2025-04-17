@@ -1,0 +1,6 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","2934","The page becomes unresponsive when increasing the quantity with the pink or green colors chosen","chromium","Thu Apr 17 17:38:36 GMT 2025","passed","Thu Apr 17 17:38:39 GMT 2025","Academybugs Test","academybugs.test.js","",""
+"","2610","The page freezes when clicking on the numbers of results","chromium","Thu Apr 17 17:38:19 GMT 2025","passed","Thu Apr 17 17:38:21 GMT 2025","Academybugs Test","academybugs.test.js","",""
+"","3003","The page becomes unresponsive when clicking on ""Post Comment""","chromium","Thu Apr 17 17:38:33 GMT 2025","passed","Thu Apr 17 17:38:36 GMT 2025","Academybugs Test","academybugs.test.js","",""
+"","3203","The page freezes when changing the currency","chromium","Thu Apr 17 17:38:22 GMT 2025","passed","Thu Apr 17 17:38:25 GMT 2025","Academybugs Test","academybugs.test.js","",""
+"","8021","The page becomes unresponsive when clicking on ""Retrieve Password"" and no email is sent","chromium","Thu Apr 17 17:38:25 GMT 2025","passed","Thu Apr 17 17:38:33 GMT 2025","Academybugs Test","academybugs.test.js","",""

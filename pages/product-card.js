@@ -17,6 +17,7 @@ export class ProductCard {
         //Локатор для выбора цвета товара
         this.colorItem = (optionItemId) =>
             page.locator(`.ec_details_swatches.ec_details_html_swatches li.ec_details_swatch[data-optionitem-id="${optionItemId}"]`);
+        this.colorItemButton = (color) => page.getByRole('img', {'name':color})
 
         // Локатор для выпадающего списка валют
         this.currencySelect = page.locator('#ec_currency_conversion');
@@ -133,24 +134,21 @@ export class ProductCard {
 
     /**
      * Выбор цвета товара по его ID
-     * @param colorId
+     * @param color
      * @returns {Promise<void>}
      */
-    async selectProductColor(colorId){
-        const colorLocator = this.colorItem(colorId);
-        //Я не знаю уже что сделать, чтобы убрать таймаут, потому что другие способы проверки у меня не сработали -
-        // пробовал проверять по isVisible для элемента выбора цвет, для картинки,
-        // ставить экспект на видимость - ничего из этого не сработало
-        await this.page.waitForTimeout(6000)
+    async selectProductColor(color){
+        //Добавил ожидание загрузки картинки нового цвета, чтобы тест не падал если элемент не успел прогрузиться -
+        // заменил этим ранее добавленный таймаут в 6 секунд
+        await this.page.waitForResponse(response => {
+            const url = response.url();
+            //Проверяю что то, что после последнего слеша в адресе соответствует маске. Не совсем понял,
+            // почему глобальная переменная пишется через $, надо будет поподробнее почитать про них
+            return /\/([^/]+\.png)$/.test(url) && RegExp.$1 === `${color.toLowerCase()}.png`;
+        });
 
-        // Находим дочерний элемент <img> внутри <li>
-        const imageLocator = colorLocator.locator('img');
+        await this.colorItemButton(color).click()
 
-        // Ждем, пока элемент станет видимым
-        await colorLocator.waitFor({ state: 'visible'});
-
-        // Кликаем по элементу
-        await colorLocator.click();
     }
 
     /**

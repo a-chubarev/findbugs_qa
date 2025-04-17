@@ -48,9 +48,8 @@ test.describe.serial('Academybugs Test', () => {
 
     test(' The page becomes unresponsive when increasing the quantity with the pink or green colors chosen', async ({page}) => {
         await productsPage.productItem('4381370').click()
-        await productCard.selectProductColor(10)
+        await productCard.selectProductColor('Green')
         await productCard.increaseProductQuantity(1)
-
         await expect(mainPage.bugMessage).toBeVisible()
     })
 })
